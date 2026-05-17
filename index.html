@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Options P&L Calculator — LEAPS · DITM · CSP · CC</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f2f4fa;--bg2:#e8eaf4;--s1:#ffffff;--s2:#f7f8fd;--s3:#eef0f8;
+  --bd:rgba(0,0,0,0.08);--bd2:rgba(0,0,0,0.13);
+  --tx:#1a1f36;--mu:#6b7280;--mu2:#9ca3af;
+  --blue:#2563eb;--blue-lt:#dbeafe;
+  --green:#16a34a;--green-lt:#dcfce7;
+  --amber:#b45309;--amber-lt:#fef3c7;
+  --violet:#6d28d9;--violet-lt:#ede9fe;
+  --cyan:#0e7490;--cyan-lt:#cffafe;
+  --profit:#16a34a;--loss:#dc2626;
+  --sh:0 1px 3px rgba(0,0,0,0.06),0 4px 14px rgba(0,0,0,0.04);
+}
+html,body{background:var(--bg);color:var(--tx);font-family:'DM Mono',monospace;font-size:13px;line-height:1.6;min-height:100vh}
+::-webkit-scrollbar{width:6px}::-webkit-scrollbar-track{background:var(--bg)}::-webkit-scrollbar-thumb{background:var(--bd2);border-radius:99px}
+.app{max-width:980px;margin:0 auto;padding:28px 18px 72px}
+
+/* HERO */
+.hero{background:var(--s1);border:1px solid var(--bd);border-radius:18px;padding:26px 30px;margin-bottom:22px;box-shadow:var(--sh)}
+.eyebrow{font-size:10px;letter-spacing:.22em;color:var(--mu);text-transform:uppercase;margin-bottom:8px}
+.hero-title{font-family:'Syne',sans-serif;font-size:clamp(22px,4vw,36px);font-weight:800;color:var(--tx);letter-spacing:-.02em;line-height:1.1}
+.hero-title span{color:var(--blue)}
+.hero-sub{font-size:12px;color:var(--mu);margin-top:9px;line-height:1.8;max-width:540px}
+.badge-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:13px}
+.badge{padding:4px 12px;border-radius:99px;font-size:10px;letter-spacing:.06em;text-transform:uppercase;font-weight:600;border:1.5px solid}
+.b-buy {background:var(--amber-lt);border-color:#fbbf24;color:var(--amber)}
+.b-sell{background:var(--blue-lt);border-color:#93c5fd;color:var(--blue)}
+
+/* TABS */
+.tabs{display:grid;grid-template-columns:repeat(5,1fr);gap:4px;background:var(--s1);border:1px solid var(--bd);border-radius:16px;padding:5px;margin-bottom:20px;box-shadow:var(--sh)}
+@media(max-width:580px){.tabs{grid-template-columns:1fr 1fr}}
+.tb{padding:10px 5px;border:1.5px solid transparent;background:transparent;color:var(--mu);font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.02em;border-radius:11px;cursor:pointer;transition:all .18s;text-align:center;line-height:1.35}
+.tb:hover{background:var(--s3);color:var(--tx)}
+.tb .ic{display:block;font-size:17px;margin-bottom:3px}
+.tb .lb{display:block;font-weight:600}
+.tb.active.tl{background:var(--amber-lt);border-color:#fbbf24;color:var(--amber)}
+.tb.active.td{background:var(--violet-lt);border-color:#c4b5fd;color:var(--violet)}
+.tb.active.tc{background:var(--blue-lt);border-color:#93c5fd;color:var(--blue)}
+.tb.active.tcc{background:var(--green-lt);border-color:#86efac;color:var(--green)}
+.tb.active.ta{background:var(--cyan-lt);border-color:#67e8f9;color:var(--cyan)}
+
+/* PILL */
+.pill{display:inline-flex;align-items:center;gap:7px;padding:6px 15px;border-radius:99px;font-size:11px;letter-spacing:.05em;text-transform:uppercase;font-weight:600;margin-bottom:17px;border:1.5px solid}
+.pill-buy {background:var(--amber-lt);border-color:#fbbf24;color:var(--amber)}
+.pill-sell{background:var(--blue-lt);border-color:#93c5fd;color:var(--blue)}
+.pill-all {background:var(--cyan-lt);border-color:#67e8f9;color:var(--cyan)}
+
+/* GRID */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:15px;margin-bottom:18px}
+@media(max-width:620px){.g2{grid-template-columns:1fr}}
+
+/* PANEL */
+.panel{background:var(--s1);border:1px solid var(--bd);border-radius:14px;padding:20px;box-shadow:var(--sh)}
+.ptitle{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--mu);margin-bottom:16px;font-weight:600;display:flex;align-items:center;gap:7px}
+.ptitle::before{content:'';display:inline-block;width:3px;height:12px;border-radius:99px;background:currentColor;opacity:.55}
+
+/* CONTROLS */
+.ctrl{margin-bottom:16px}.ctrl:last-child{margin-bottom:0}
+.ct{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px}
+.cl{font-size:11px;color:var(--mu);font-weight:500}
+.cv{font-family:'Syne',sans-serif;font-size:17px;font-weight:800;color:var(--tx)}
+.cv.ba{color:var(--amber)}.cv.bb{color:var(--blue)}.cv.bg{color:var(--green)}.cv.bv{color:var(--violet)}
+.ch{font-size:10px;color:var(--mu2);margin-top:4px;line-height:1.5}
+
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:4px;background:var(--bg2);border-radius:99px;outline:none;cursor:pointer;border:1px solid var(--bd)}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;border-radius:50%;background:#fff;border:2.5px solid var(--blue);cursor:pointer;transition:transform .15s;box-shadow:0 1px 4px rgba(0,0,0,0.13)}
+input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.22)}
+input[type=range].ra::-webkit-slider-thumb{border-color:var(--amber)}
+input[type=range].rg::-webkit-slider-thumb{border-color:var(--green)}
+input[type=range].rv::-webkit-slider-thumb{border-color:var(--violet)}
+input[type=range].rc::-webkit-slider-thumb{border-color:var(--cyan)}
+
+/* STATS */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:11px;margin-bottom:18px}
+@media(max-width:580px){.stats{grid-template-columns:1fr 1fr}}
+.sc{background:var(--s1);border:1px solid var(--bd);border-radius:13px;padding:14px 15px;box-shadow:var(--sh)}
+.sl{font-size:10px;color:var(--mu);letter-spacing:.08em;text-transform:uppercase;margin-bottom:5px;font-weight:600}
+.sv{font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:var(--tx);line-height:1.1}
+.sv.profit{color:var(--profit)}.sv.loss{color:var(--loss)}
+.sv.sa{color:var(--amber)}.sv.sb{color:var(--blue)}.sv.sg{color:var(--green)}.sv.sv2{color:var(--violet)}
+.sv.sm{color:var(--mu);font-size:12px;font-weight:500;line-height:1.5}
+.ss{font-size:10px;color:var(--mu2);margin-top:3px}
+
+/* CHART */
+.cbox{background:var(--s1);border:1px solid var(--bd);border-radius:14px;padding:20px;margin-bottom:16px;box-shadow:var(--sh)}
+.chdr{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;flex-wrap:wrap;gap:10px}
+.cttl{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;color:var(--tx)}
+.csubl{font-size:10px;color:var(--mu2);margin-top:2px}
+.legend{display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+.li{display:flex;align-items:center;gap:6px;font-size:10px;color:var(--mu);font-weight:500}
+
+/* INSIGHT */
+.insight{background:var(--s2);border:1px solid var(--bd2);border-radius:13px;padding:17px 19px;font-size:12px;color:var(--mu);line-height:1.9;margin-bottom:18px;box-shadow:var(--sh)}
+.insight b{color:var(--tx)}
+.pt{color:var(--profit);font-weight:600}.lt{color:var(--loss);font-weight:600}
+.bt{color:var(--blue);font-weight:600}.at{color:var(--amber);font-weight:600}
+.vt{color:var(--violet);font-weight:600}.gt{color:var(--green);font-weight:600}
+
+/* CONCEPT */
+.concept{background:var(--s1);border:1px solid var(--bd);border-radius:14px;padding:20px;box-shadow:var(--sh)}
+.cgrid{display:grid;grid-template-columns:1fr 1fr;gap:11px;margin-top:14px}
+@media(max-width:560px){.cgrid{grid-template-columns:1fr}}
+.ccard{background:var(--bg);border:1px solid var(--bd);border-radius:11px;padding:14px}
+.ccl{font-size:9px;color:var(--mu2);letter-spacing:.12em;text-transform:uppercase;margin-bottom:5px;font-weight:600}
+.cct{font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:var(--tx);margin-bottom:5px}
+.ccb{font-size:11px;color:var(--mu);line-height:1.7}
+
+/* COMPARE */
+.cmp-intro{background:var(--s1);border:1px solid var(--bd);border-radius:13px;padding:17px 19px;margin-bottom:16px;box-shadow:var(--sh);font-size:12px;color:var(--mu);line-height:1.8}
+.cmp-grid{display:grid;grid-template-columns:1fr 1fr;gap:13px;margin-bottom:18px}
+@media(max-width:560px){.cmp-grid{grid-template-columns:1fr}}
+
+/* UTIL */
+.hidden{display:none!important}
+hr{border:none;border-top:1px solid var(--bd);margin:4px 0 14px}
+.footer{text-align:center;font-size:10px;color:var(--mu2);margin-top:48px;line-height:2;opacity:.65}
+.panel,.sc,.cbox,.insight,.concept{animation:fu .25s ease both}
+@keyframes fu{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- HERO -->
+<div class="hero">
+  <div class="eyebrow">Options Strategy Toolkit · 2026</div>
+  <h1 class="hero-title">Options <span>P&amp;L Calculator</span></h1>
+  <p class="hero-sub">Interactive profit &amp; loss graphs for all four core options strategies. Drag any slider — chart, stats, and plain-English explanation update instantly.</p>
+  <div class="badge-row">
+    <span class="badge b-buy">📈 Premium Buyers: LEAPS · Deep ITM LEAPS</span>
+    <span class="badge b-sell">📉 Premium Sellers: CSP · Covered Call</span>
+  </div>
+</div>
+
+<!-- TABS: LEAPS → DITM → CSP → CC → Compare All -->
+<div class="tabs">
+  <button class="tb tl active" onclick="setMode('leaps')"><span class="ic">🟡</span><span class="lb">LEAPS Call</span></button>
+  <button class="tb td"        onclick="setMode('dleaps')"><span class="ic">🟣</span><span class="lb">Deep ITM LEAPS</span></button>
+  <button class="tb tc"        onclick="setMode('csp')">  <span class="ic">🔵</span><span class="lb">Cash-Secured Put</span></button>
+  <button class="tb tcc"       onclick="setMode('cc')">   <span class="ic">🟢</span><span class="lb">Covered Call</span></button>
+  <button class="tb ta"        onclick="setMode('all')">  <span class="ic">⚡</span><span class="lb">Compare All</span></button>
+</div>
+
+<!-- PILL -->
+<div id="pill" class="pill pill-buy">📈 Premium Buyer — you PAY premium upfront · limited loss · unlimited upside</div>
+
+<!-- INDIVIDUAL INPUTS -->
+<div class="g2" id="ind-inputs">
+  <div class="panel">
+    <div class="ptitle" id="lt" style="color:var(--amber)">Strategy Inputs</div>
+    <div class="ctrl">
+      <div class="ct"><span class="cl">Current Stock Price</span><span class="cv ba" id="d-stock">$100</span></div>
+      <input type="range" class="ra" id="sl-stock" min="30" max="300" value="100" step="1" oninput="update()">
+    </div>
+    <div class="ctrl">
+      <div class="ct"><span class="cl" id="lbl-k">Strike Price</span><span class="cv ba" id="d-strike">$105</span></div>
+      <input type="range" class="ra" id="sl-strike" min="30" max="300" value="105" step="1" oninput="update()">
+      <div class="ch" id="hint-k">ATM or slightly OTM for leverage.</div>
+    </div>
+    <div class="ctrl">
+      <div class="ct"><span class="cl" id="lbl-p">Premium PAID</span><span class="cv ba" id="d-prem">$10</span></div>
+      <input type="range" class="ra" id="sl-prem" min="1" max="80" value="10" step="1" oninput="update()">
+      <div class="ch" id="hint-p">What you pay upfront. This is your maximum possible loss.</div>
+    </div>
+  </div>
+  <div class="panel">
+    <div class="ptitle" id="rt" style="color:var(--amber)">Reference / Additional</div>
+    <div class="ctrl hidden" id="ctrl-cost">
+      <div class="ct"><span class="cl">Share Cost Basis</span><span class="cv bg" id="d-cost">$90</span></div>
+      <input type="range" class="rg" id="sl-cost" min="30" max="300" value="90" step="1" oninput="update()">
+      <div class="ch">Price you originally paid for the 100 shares you own.</div>
+    </div>
+    <div class="ctrl hidden" id="ctrl-dte">
+      <div class="ct"><span class="cl">Days to Expiration (DTE)</span><span class="cv ba" id="d-dte">365d</span></div>
+      <input type="range" class="ra" id="sl-dte" min="180" max="730" value="365" step="30" oninput="update()">
+      <div class="ch">LEAPS: 360–730 DTE ideal. Reference display only.</div>
+    </div>
+    <div class="ctrl hidden" id="ctrl-delta">
+      <div class="ct"><span class="cl">Approx Delta</span><span class="cv bv" id="d-delta">0.85</span></div>
+      <input type="range" class="rv" id="sl-delta" min="70" max="95" value="85" step="1" oninput="update()">
+      <div class="ch">Deep ITM target: 0.80–0.95. Moves almost like owning shares.</div>
+    </div>
+    <div id="rexp" style="font-size:11px;color:var(--mu);line-height:1.9;margin-top:4px"></div>
+  </div>
+</div>
+
+<!-- COMPARE ALL -->
+<div id="all-inputs" class="hidden">
+  <div class="cmp-intro">
+    <b style="color:var(--tx)">Compare All 4 Strategies on One Chart.</b><br>
+    Adjust each strategy's inputs independently. The stock price slider is shared across all four.
+  </div>
+  <div class="g2" style="margin-bottom:14px">
+    <div class="panel">
+      <div class="ptitle" style="color:var(--cyan)">Shared — Current Stock Price</div>
+      <div class="ctrl">
+        <div class="ct"><span class="cl">Stock Price</span><span class="cv" style="color:var(--cyan)" id="d-as">$100</span></div>
+        <input type="range" class="rc" id="sl-as" min="30" max="300" value="100" step="1" oninput="updateAll()">
+      </div>
+    </div>
+    <div class="panel">
+      <div class="ptitle" style="color:var(--mu)">Strategy Legend</div>
+      <div style="font-size:11px;color:var(--mu);line-height:2.1">
+        🟡 <b style="color:var(--amber)">LEAPS</b> — buy call, pay premium, unlimited upside ↑<br>
+        🟣 <b style="color:var(--violet)">Deep ITM LEAPS</b> — stock substitute, high delta<br>
+        🔵 <b style="color:var(--blue)">CSP</b> — sell put, collect premium, income<br>
+        🟢 <b style="color:var(--green)">CC</b> — sell call on owned shares, capped upside
+      </div>
+    </div>
+  </div>
+  <div class="cmp-grid">
+    <div class="panel">
+      <div class="ptitle" style="color:var(--amber)">🟡 LEAPS Settings</div>
+      <div class="ctrl"><div class="ct"><span class="cl">Strike</span><span class="cv ba" id="d-al">$105</span></div><input type="range" class="ra" id="sl-al" min="30" max="300" value="105" step="1" oninput="updateAll()"></div>
+      <div class="ctrl"><div class="ct"><span class="cl">Premium Paid</span><span class="cv ba" id="d-alp">$10</span></div><input type="range" class="ra" id="sl-alp" min="1" max="80" value="10" step="1" oninput="updateAll()"></div>
+    </div>
+    <div class="panel">
+      <div class="ptitle" style="color:var(--violet)">🟣 Deep ITM LEAPS Settings</div>
+      <div class="ctrl"><div class="ct"><span class="cl">Deep Strike (ITM)</span><span class="cv bv" id="d-ad">$75</span></div><input type="range" class="rv" id="sl-ad" min="30" max="300" value="75" step="1" oninput="updateAll()"></div>
+      <div class="ctrl"><div class="ct"><span class="cl">Premium Paid</span><span class="cv bv" id="d-adp">$28</span></div><input type="range" class="rv" id="sl-adp" min="1" max="80" value="28" step="1" oninput="updateAll()"></div>
+    </div>
+    <div class="panel">
+      <div class="ptitle" style="color:var(--blue)">🔵 CSP Settings</div>
+      <div class="ctrl"><div class="ct"><span class="cl">Strike (OTM)</span><span class="cv bb" id="d-ac">$92</span></div><input type="range" id="sl-ac" min="30" max="300" value="92" step="1" oninput="updateAll()"></div>
+      <div class="ctrl"><div class="ct"><span class="cl">Premium Collected</span><span class="cv bb" id="d-acp">$4</span></div><input type="range" id="sl-acp" min="1" max="40" value="4" step="1" oninput="updateAll()"></div>
+    </div>
+    <div class="panel">
+      <div class="ptitle" style="color:var(--green)">🟢 CC Settings</div>
+      <div class="ctrl"><div class="ct"><span class="cl">Strike (OTM)</span><span class="cv bg" id="d-acc">$110</span></div><input type="range" class="rg" id="sl-acc" min="30" max="300" value="110" step="1" oninput="updateAll()"></div>
+      <div class="ctrl"><div class="ct"><span class="cl">Premium Collected</span><span class="cv bg" id="d-accp">$4</span></div><input type="range" class="rg" id="sl-accp" min="1" max="40" value="4" step="1" oninput="updateAll()"></div>
+      <div class="ctrl"><div class="ct"><span class="cl">Cost Basis</span><span class="cv bg" id="d-accc">$90</span></div><input type="range" class="rg" id="sl-accc" min="30" max="300" value="90" step="1" oninput="updateAll()"></div>
+    </div>
+  </div>
+</div>
+
+<!-- STATS -->
+<div class="stats" id="stat-strip">
+  <div class="sc"><div class="sl">Breakeven</div><div class="sv sa" id="s-be">—</div><div class="ss" id="s-be-sub">stock must reach</div></div>
+  <div class="sc"><div class="sl">Max Profit</div><div class="sv profit" id="s-mp">—</div><div class="ss" id="s-mp-sub">per share</div></div>
+  <div class="sc"><div class="sl">Max Loss</div><div class="sv loss" id="s-ml">—</div><div class="ss" id="s-ml-sub">worst case</div></div>
+  <div class="sc"><div class="sl">P&amp;L Right Now</div><div class="sv" id="s-now">—</div><div class="ss" id="s-now-sub">at current price</div></div>
+</div>
+
+<!-- CHART -->
+<div class="cbox">
+  <div class="chdr">
+    <div><div class="cttl" id="chart-ttl">LEAPS Call — P&amp;L at Expiration</div><div class="csubl">Hover any point for exact values · X-axis = stock price at expiration</div></div>
+    <div class="legend" id="legend"></div>
+  </div>
+  <div style="position:relative;height:315px"><canvas id="plChart" role="img" aria-label="Options P&L chart"></canvas></div>
+</div>
+
+<!-- INSIGHT -->
+<div class="insight" id="insight">Loading…</div>
+
+<!-- CONCEPT -->
+<div class="concept" id="concept">
+  <div class="ptitle" id="concept-ttl" style="color:var(--mu)">Strategy Mechanics</div>
+  <div class="cgrid" id="cgrid"></div>
+</div>
+
+<div class="footer">Options P&L Calculator · LEAPS · Deep ITM LEAPS · CSP · Covered Call<br>For educational reference only · Not financial advice · Values shown at expiration</div>
+</div>
+
+<script>
+// P&L math
+const PL={
+  leaps: (p,K,pr)=>p>=K?(p-K)-pr:-pr,
+  dleaps:(p,K,pr)=>p>=K?(p-K)-pr:-pr,
+  csp:   (p,K,pr)=>p>=K?pr:pr-(K-p),
+  cc:    (p,K,pr,c)=>p>=K?(K-c)+pr:(p-c)+pr,
+};
+const PRICES=[];for(let p=30;p<=280;p+=2)PRICES.push(p);
+let mode='leaps',chart=null;
+const $=id=>document.getElementById(id);
+const V=id=>+$(id).value;
+const fmt=n=>(n>=0?'+$':'-$')+Math.abs(n).toFixed(0);
+const gv=()=>({stock:V('sl-stock'),strike:V('sl-strike'),prem:V('sl-prem'),cost:V('sl-cost'),dte:V('sl-dte'),delta:V('sl-delta')/100});
+
+// Config per mode
+const CFG={
+  leaps:{
+    col:'var(--amber)',rawCol:'#b45309',cls:'ba',rng:'ra',
+    pill:'📈 Premium Buyer — you PAY premium upfront · limited loss · unlimited upside ↑',pillC:'pill-buy',
+    ltitle:'LEAPS Call Inputs',rtitle:'LEAPS Reference',
+    kLbl:'Strike Price (ATM or slightly OTM)',kHint:'ATM or slightly OTM for directional leverage on a 1–3 year thesis.',
+    pLbl:'Premium PAID (= your max loss)',pHint:'What you pay upfront. Only enter when IV Rank is below 30–50%.',
+    showCost:false,showDTE:true,showDelta:false,
+    def:{stock:100,strike:105,prem:10,cost:90,dte:365,delta:85},
+    beClass:'sa',chartTtl:'LEAPS Call — P&L at Expiration',
+    expl:'<b>LEAPS Mechanics</b><br>You BUY a long-dated call option (1–3 year expiry).<br>Premium paid = your absolute max loss. Stock can go to $0 — you lose no more.<br>You profit when stock rises above strike + premium (your breakeven).<br><br><b>Key Formulas</b><br>Breakeven = Strike + Premium Paid<br>Max Loss = Premium Paid (fixed &amp; limited ✓)<br>Max Profit = Unlimited ↑<br><br><b>Entry Rule (your checklist)</b><br>IV Rank &lt;30–50% · RSI oversold preferred · DTE 360+ days · Delta 0.80–0.95 for Deep ITM',
+  },
+  dleaps:{
+    col:'var(--violet)',rawCol:'#6d28d9',cls:'bv',rng:'rv',
+    pill:'📈 Premium Buyer (Deep ITM) — stock substitute · delta 0.80–0.95 · max loss = premium paid',pillC:'pill-buy',
+    ltitle:'Deep ITM LEAPS Inputs',rtitle:'Deep LEAPS Reference',
+    kLbl:'Strike Price (Deep ITM — 20%+ below stock)',kHint:'Must be 20%+ below current stock price. This places you deep in-the-money.',
+    pLbl:'Total Premium PAID',pHint:'Large premium but mostly intrinsic value. Extrinsic must be under 20% of total premium.',
+    showCost:false,showDTE:false,showDelta:true,
+    def:{stock:100,strike:75,prem:28,cost:90,dte:365,delta:85},
+    beClass:'sv2',chartTtl:'Deep ITM LEAPS — P&L at Expiration (Stock Substitute)',
+    expl:'<b>Deep ITM LEAPS Mechanics</b><br>You BUY a call deep in the money — acts almost like owning 100 shares.<br>Delta 0.80–0.95 = option moves ~$0.85 for every $1 the stock moves.<br>Premium is large but mostly intrinsic value, so time decay (theta) is minimal.<br><br><b>Key Formulas</b><br>Breakeven = Strike + Premium Paid<br>Intrinsic Value = Current Stock Price − Strike<br>Extrinsic Value = Premium − Intrinsic (must be &lt;20% of premium)<br>Max Loss = Premium Paid (limited ✓ — far less than owning 100 shares)<br><br><b>Entry Rule</b><br>Delta 0.80–0.95 · Extrinsic &lt;20% of premium · IV Rank &lt;50% · Theta −$0.01 to −$0.05/day',
+  },
+  csp:{
+    col:'var(--blue)',rawCol:'#2563eb',cls:'bb',rng:'',
+    pill:'📉 Premium Seller — you RECEIVE premium upfront · income strategy · assignment risk below strike',pillC:'pill-sell',
+    ltitle:'CSP Inputs',rtitle:'CSP Reference',
+    kLbl:'Strike Price (OTM — below current stock price)',kHint:'Typically 5–15% below current stock price, at or below a key support level.',
+    pLbl:'Premium Collected (your income today)',pHint:'Cash received immediately. Target 1–2% of strike for 30–45 DTE. IV Rank ≥40% required.',
+    showCost:false,showDTE:false,showDelta:false,
+    def:{stock:100,strike:92,prem:4,cost:90,dte:365,delta:85},
+    beClass:'sb',chartTtl:'Cash-Secured Put (CSP) — P&L at Expiration',
+    expl:'<b>CSP Mechanics</b><br>You SELL a put and receive cash premium immediately into your account.<br>If stock stays above strike at expiration → option worthless → keep full premium.<br>If stock falls below strike → you are assigned (must buy 100 shares at the strike price).<br><br><b>Key Formulas</b><br>Breakeven = Strike − Premium Collected<br>Max Profit = Premium Collected (flat line to the RIGHT of strike)<br>Max Loss = Strike − Premium (if stock falls to $0)<br><br><b>Entry Rules (your checklist)</b><br>IV Rank ≥40% · No earnings within 30 days · Assignment conviction required · Delta −0.10 to −0.30 · DTE 30–45 days',
+  },
+  cc:{
+    col:'var(--green)',rawCol:'#16a34a',cls:'bg',rng:'rg',
+    pill:'📉 Premium Seller — you RECEIVE premium on shares you own · income · upside capped at strike',pillC:'pill-sell',
+    ltitle:'Covered Call Inputs',rtitle:'CC Reference',
+    kLbl:'Strike Price (OTM — above current stock price)',kHint:'Above your cost basis. Sell near a resistance level where stock has stalled before.',
+    pLbl:'Premium Collected (your income today)',pHint:'Income from selling the call. This permanently lowers your effective cost basis.',
+    showCost:true,showDTE:false,showDelta:false,
+    def:{stock:100,strike:110,prem:4,cost:90,dte:365,delta:85},
+    beClass:'sg',chartTtl:'Covered Call (CC) — P&L at Expiration',
+    expl:'<b>Covered Call Mechanics</b><br>You own 100 shares AND sell a call against them to earn income.<br>If stock stays below strike → call expires worthless → keep shares + premium.<br>If stock rises above strike → shares called away at the strike price. You miss further upside.<br><br><b>Key Formulas</b><br>Breakeven = Cost Basis − Premium Collected<br>Max Profit = (Strike − Cost Basis) + Premium (capped flat line)<br>Max Loss = Cost Basis − Premium (if stock falls to $0)<br><br><b>Entry Rules</b><br>Sell when RSI ≥65 (overbought) · Strike near resistance · ~0.20 delta · 30 DTE · Confirm: happy if shares called away?',
+  },
+};
+
+const CONCEPTS={
+  leaps:[
+    {l:'Max Loss Is Fixed',t:'Can Never Lose More Than Premium Paid',b:'Unlike owning shares (full value at risk), your loss is capped at exactly what you paid. Stock goes to zero — you lose $10. Not a dollar more. This asymmetry is the LEAPS advantage.'},
+    {l:'Breakeven',t:'Strike + Premium Paid',b:'Stock must rise above strike + premium before you profit. This is why LEAPS need 1–3 years of runway — enough time for your thesis to play out without excessive time decay hurting you.'},
+    {l:'IV Rank Rule',t:'Only Buy When IV Rank is Below 30–50%',b:'Low IV = cheap premiums = lower breakeven = more room to profit. Buying LEAPS in a high IV environment is overpaying. You are literally paying a premium tax on every dollar of future upside.'},
+    {l:'Unlimited Upside',t:'Every Dollar Above Breakeven Is Pure Profit',b:'Once stock rises above strike + premium, there is no cap on gains. Limited loss, unlimited gain — this asymmetry is why LEAPS are a powerful directional tool when IV is low.'},
+  ],
+  dleaps:[
+    {l:'Stock Substitute',t:'Delta 0.80–0.95 Moves Like Owning Shares',b:'For every $1 the stock moves, your deep LEAPS moves ~$0.85. You capture nearly all of the upside of owning shares while committing far less capital.'},
+    {l:'Intrinsic Value Rule',t:'>80% of Premium Must Be Intrinsic Value',b:'Deep ITM means the option already has most of its value from stock price vs strike. The extrinsic (time value) portion must stay under 20% — meaning minimal time decay exposure.'},
+    {l:'Capital Efficiency',t:'Fraction of Capital vs Buying Shares',b:'Owning 100 shares at $100 = $10,000 at risk. A deep LEAPS at $28 premium = $2,800 per contract with similar directional exposure. $7,200 of capital freed for other trades.'},
+    {l:'Max Loss Capped',t:'Still Limited to Premium Paid',b:'Even though you control 100 shares with near-full delta, your max loss is exactly the premium paid. Real shares can fall to zero on the full $10,000. Your floor is fixed.'},
+  ],
+  csp:[
+    {l:'Why You Win',t:'Stock Stays Above Strike → Keep Full Premium',b:'The flat right section of the graph is your profit zone. Stock can go sideways or up — you win either way. The option simply decays to zero over time and you keep all the cash collected.'},
+    {l:'Assignment Risk',t:'Stock Falls Below Strike → You Buy 100 Shares',b:'You must buy 100 shares at the strike price. If you wanted the shares anyway, your effective cost basis = Strike − Premium. This is why assignment conviction is non-negotiable in the checklist.'},
+    {l:'IV Rank Rule',t:'Enter Only When IV Rank Is 40%+',b:'High IV = fat premiums = more income + more cushion. Low IV = thin premiums not worth the assignment risk. IV rank is the first gate — if it fails, stop the analysis immediately.'},
+    {l:'Earnings Blackout',t:'No Earnings Within 30 Days — Hard Gate',b:'Earnings cause IV crush (destroys premium value) and create binary, unpredictable outcomes. 30-day blackout before any earnings announcement is a hard gate. No exceptions in the checklist.'},
+  ],
+  cc:[
+    {l:'Income on Shares You Own',t:'Collect Rent on Your Stock Position',b:'You already own shares. Selling a call generates income without selling the position. Every premium collected permanently lowers your effective cost basis — the compounding effect of the Wheel.'},
+    {l:'The Upside Cap',t:'Shares Called Away if Stock Rises Past Strike',b:'If stock rockets above your strike, shares are called away at the strike price. You profit — but miss the move above. This is why you choose the strike near resistance where stock has historically stalled.'},
+    {l:'Timing Rule',t:'Sell When RSI is Overbought (65+)',b:'Selling calls at overbought RSI levels means the stock is more likely to consolidate or pull back — your shares stay with you. If stock is in a strong uptrend, wait. Never sell a call just to feel productive.'},
+    {l:'Breakeven & Cost Basis',t:'Each Call Sold Lowers Your Cost Basis',b:'Breakeven = Cost Basis − Premium. Sell enough covered calls over time and your effective cost basis approaches zero. That\'s the Wheel strategy working as intended — owning shares for free.'},
+  ],
+};
+
+function setMode(m){
+  mode=m;
+  document.querySelectorAll('.tb').forEach(b=>b.classList.remove('active'));
+  const tabMap={leaps:'tl',dleaps:'td',csp:'tc',cc:'tcc',all:'ta'};
+  document.querySelector('.tb.'+tabMap[m]).classList.add('active');
+
+  const isAll=m==='all';
+  $('ind-inputs').classList.toggle('hidden',isAll);
+  $('all-inputs').classList.toggle('hidden',!isAll);
+  $('stat-strip').classList.toggle('hidden',isAll);
+  $('concept').classList.toggle('hidden',isAll);
+
+  if(isAll){
+    const pill=$('pill');
+    pill.textContent='⚡ Compare All — Premium Buyers (LEAPS · DITM) vs Premium Sellers (CSP · CC)';
+    pill.className='pill pill-all';
+    updateAll();return;
+  }
+
+  const c=CFG[m];
+  $('pill').textContent=c.pill;$('pill').className='pill '+c.pillC;
+  $('lt').textContent=c.ltitle;$('lt').style.color=c.col;
+  $('rt').textContent=c.rtitle;$('rt').style.color=c.col;
+  $('lbl-k').textContent=c.kLbl;$('hint-k').textContent=c.kHint;
+  $('lbl-p').textContent=c.pLbl;$('hint-p').textContent=c.pHint;
+
+  // slider thumb colors
+  ['sl-stock','sl-strike','sl-prem'].forEach(id=>{$(id).className=c.rng;});
+  // display value colors
+  ['d-stock','d-strike','d-prem'].forEach(id=>{$(id).className='cv '+c.cls;});
+
+  $('ctrl-cost').classList.toggle('hidden',!c.showCost);
+  $('ctrl-dte').classList.toggle('hidden',!c.showDTE);
+  $('ctrl-delta').classList.toggle('hidden',!c.showDelta);
+  $('rexp').innerHTML=c.expl;
+
+  // apply defaults
+  Object.entries(c.def).forEach(([k,v])=>{const s=$(('sl-'+k));if(s)s.value=v;});
+  update();
+}
+
+function update(){
+  const v=gv();
+  $('d-stock').textContent='$'+v.stock;
+  $('d-strike').textContent='$'+v.strike;
+  $('d-prem').textContent='$'+v.prem;
+  $('d-cost').textContent='$'+v.cost;
+  $('d-dte').textContent=v.dte+'d';
+  $('d-delta').textContent=v.delta.toFixed(2);
+
+  const plFns={leaps:p=>PL.leaps(p,v.strike,v.prem),dleaps:p=>PL.dleaps(p,v.strike,v.prem),csp:p=>PL.csp(p,v.strike,v.prem),cc:p=>PL.cc(p,v.strike,v.prem,v.cost)};
+  const fn=plFns[mode];
+  const pts=PRICES.map(p=>({x:p,y:fn(p)}));
+  const c=CFG[mode];
+
+  $('chart-ttl').textContent=c.chartTtl;
+  drawChart([{label:modeName(mode)+' P&L',data:pts,color:c.rawCol}]);
+  updStats(v,fn,c);
+  updInsight(v,fn);
+  updConcept();
+  updLegend([{label:modeName(mode)+' P&L',color:c.rawCol}]);
+}
+
+function updateAll(){
+  const stock=V('sl-as');
+  $('d-as').textContent='$'+stock;
+  const syncs=[['sl-al','d-al'],['sl-alp','d-alp'],['sl-ad','d-ad'],['sl-adp','d-adp'],['sl-ac','d-ac'],['sl-acp','d-acp'],['sl-acc','d-acc'],['sl-accp','d-accp'],['sl-accc','d-accc']];
+  syncs.forEach(([s,d])=>{if($(s)&&$(d))$(d).textContent='$'+$(s).value;});
+
+  const ls=V('sl-al'),lp=V('sl-alp');
+  const ds=V('sl-ad'),dp=V('sl-adp');
+  const cs=V('sl-ac'),cp=V('sl-acp');
+  const ccs=V('sl-acc'),ccp=V('sl-accp'),ccc=V('sl-accc');
+
+  const datasets=[
+    {label:'LEAPS',     data:PRICES.map(p=>({x:p,y:PL.leaps(p,ls,lp)})),   color:'#b45309'},
+    {label:'Deep LEAPS',data:PRICES.map(p=>({x:p,y:PL.dleaps(p,ds,dp)})),  color:'#6d28d9',dash:[6,3]},
+    {label:'CSP',       data:PRICES.map(p=>({x:p,y:PL.csp(p,cs,cp)})),     color:'#2563eb',dash:[4,2]},
+    {label:'CC',        data:PRICES.map(p=>({x:p,y:PL.cc(p,ccs,ccp,ccc)})),color:'#16a34a',dash:[8,4]},
+  ];
+  $('chart-ttl').textContent='All 4 Strategies — P&L Comparison at Expiration';
+  drawChart(datasets);
+  updLegend(datasets.map(d=>({label:d.label,color:d.color,dash:d.dash})));
+
+  const nL=PL.leaps(stock,ls,lp),nD=PL.dleaps(stock,ds,dp),nC=PL.csp(stock,cs,cp),nCC=PL.cc(stock,ccs,ccp,ccc);
+  $('insight').innerHTML=
+    `<b>All 4 strategies at stock price <span style="color:var(--cyan)">$${stock}</span> :</b><br><br>`+
+    `<span class="at">🟡 LEAPS</span> &nbsp; BE: $${ls+lp} &nbsp;·&nbsp; Now: ${fmt(nL)}/sh (${fmt(nL*100)}/contract) &nbsp;·&nbsp; Max Loss: only −$${lp}<br>`+
+    `<span class="vt">🟣 Deep LEAPS</span> &nbsp; BE: $${ds+dp} &nbsp;·&nbsp; Now: ${fmt(nD)}/sh (${fmt(nD*100)}/contract) &nbsp;·&nbsp; Max Loss: only −$${dp}<br>`+
+    `<span class="bt">🔵 CSP</span> &nbsp; BE: $${cs-cp} &nbsp;·&nbsp; Now: ${fmt(nC)}/sh (${fmt(nC*100)}/contract) &nbsp;·&nbsp; Max Profit: +$${cp}<br>`+
+    `<span class="gt">🟢 CC</span> &nbsp; BE: $${ccc-ccp} &nbsp;·&nbsp; Now: ${fmt(nCC)}/sh (${fmt(nCC*100)}/contract) &nbsp;·&nbsp; Max Profit: +$${((ccs-ccc)+ccp).toFixed(0)} capped<br><br>`+
+    `<b>Key insight:</b> LEAPS &amp; Deep LEAPS lines slope <em>up to the right</em> — buyers profit as stock rises. `+
+    `CSP &amp; CC lines are <em>flat on the right then fall to the left</em> — sellers profit when stock stays above their strike. `+
+    `They are mirror-image strategies — one side's max gain is the other side's max loss.`;
+}
+
+function updStats(v,fn,c){
+  const isBuyer=mode==='leaps'||mode==='dleaps';
+  let be,maxP,maxL;
+  if(mode==='csp'){be=v.strike-v.prem;maxP=v.prem;maxL=-(v.strike-v.prem);}
+  else if(mode==='cc'){be=v.cost-v.prem;maxP=(v.strike-v.cost)+v.prem;maxL=-(v.cost-v.prem);}
+  else{be=v.strike+v.prem;maxP=Infinity;maxL=-v.prem;}
+
+  const now=fn(v.stock);
+  $('s-be').textContent='$'+be.toFixed(0);$('s-be').className='sv '+c.beClass;
+  $('s-be-sub').textContent=isBuyer?'stock must RISE above':'stock must STAY above';
+  $('s-mp').textContent=isFinite(maxP)?'+$'+maxP.toFixed(0)+'/sh':'Unlimited ↑';
+  $('s-mp').className='sv profit';
+  $('s-mp-sub').textContent=isFinite(maxP)?'+$'+(maxP*100).toFixed(0)+' per contract':'no cap on gains';
+  $('s-ml').textContent='-$'+Math.abs(maxL).toFixed(0)+'/sh';
+  $('s-ml').className='sv loss';
+  $('s-ml-sub').textContent=isBuyer?'limited to premium paid ✓':'if stock → $0';
+  $('s-now').textContent=fmt(now)+'/sh';
+  $('s-now').className='sv '+(now>=0?'profit':'loss');
+  $('s-now-sub').textContent=fmt(now*100)+' per contract';
+}
+
+function updInsight(v,fn){
+  const now=fn(v.stock),c=now>=0?'pt':'lt';
+  const ins={
+    leaps:()=>{
+      const be=v.strike+v.prem;
+      return `<b>Reading the LEAPS graph:</b> This is the OPPOSITE shape to CSP/CC — you are a premium <b>buyer</b>.<br>`+
+        `<b>Left of strike $${v.strike}</b> → flat loss line at <span class="lt">−$${v.prem}/share</span>. Option expired worthless. This is your floor — you <b>can never lose more than $${v.prem}/share ($${v.prem*100} per contract)</b>.<br>`+
+        `<b>Right of strike $${v.strike}</b> → diagonal rising line → profit = (stock price − $${v.strike} − $${v.prem}) per share.<br>`+
+        `Breakeven = <b>$${be}</b> (strike $${v.strike} + premium paid $${v.prem}). Stock must reach here before you profit.<br>`+
+        `At stock price <b>$${v.stock}</b> → P&L = <span class="${c}">${fmt(now)}/share (${fmt(now*100)} per contract)</span>.`;
+    },
+    dleaps:()=>{
+      const be=v.strike+v.prem;
+      const intr=Math.max(v.stock-v.strike,0);
+      const extr=Math.max(v.prem-intr,0);
+      const pct=v.prem>0?((extr/v.prem)*100).toFixed(0):0;
+      const itmPct=v.stock>v.strike?((1-v.strike/v.stock)*100).toFixed(0):0;
+      return `<b>Reading the Deep ITM LEAPS graph:</b> Same buyer shape as LEAPS — but the kink (strike) is <b>far left</b> of the stock price.<br>`+
+        `Strike <b>$${v.strike}</b> is ${itmPct}% below stock price $${v.stock} → deep in the money.<br>`+
+        `Premium <b>$${v.prem}</b> = Intrinsic ~$${intr.toFixed(0)} + Extrinsic ~$${extr.toFixed(0)} (${pct}% extrinsic). <b style="color:var(--loss)">Checklist requires extrinsic &lt;20%.</b><br>`+
+        `Breakeven = <b>$${be}</b>. Max loss = <b>−$${v.prem}/share</b> limited (vs $${v.stock*100} if you owned 100 real shares).<br>`+
+        `With delta ~${(v.delta*100).toFixed(0)}, this moves <b>$${v.delta.toFixed(2)} for every $1</b> stock moves — nearly like owning shares.<br>`+
+        `At stock price <b>$${v.stock}</b> → P&L = <span class="${c}">${fmt(now)}/share (${fmt(now*100)} per contract)</span>.`;
+    },
+    csp:()=>{
+      const be=v.strike-v.prem;
+      return `<b>Reading the CSP graph:</b> The kink (bend) sits exactly at strike <b>$${v.strike}</b>.<br>`+
+        `<b>Right of $${v.strike}</b> → flat line → option expired worthless → you keep the full premium <b><span class="pt">+$${v.prem}/share (+$${v.prem*100} total)</span></b>.<br>`+
+        `<b>Left of $${v.strike}</b> → diagonal falling line → stock below strike → losing $1 for every $1 drop → assignment risk begins.<br>`+
+        `Breakeven = <b>$${be}</b> (strike $${v.strike} − premium $${v.prem}). Below this you are at a net loss.<br>`+
+        `At stock price <b>$${v.stock}</b> → P&L = <span class="${c}">${fmt(now)}/share (${fmt(now*100)} per contract)</span>.`+
+        (v.stock<v.strike?` <b style="color:var(--loss)">⚠ Below strike — in assignment territory.</b>`:'');
+    },
+    cc:()=>{
+      const be=v.cost-v.prem;const maxP=(v.strike-v.cost)+v.prem;
+      return `<b>Reading the CC graph:</b> The kink sits at strike <b>$${v.strike}</b>.<br>`+
+        `<b>Right of $${v.strike}</b> → flat line → shares called away at strike → profit CAPPED at <b><span class="pt">+$${maxP.toFixed(0)}/share (+$${(maxP*100).toFixed(0)} total)</span></b>.<br>`+
+        `<b>Left of $${v.strike}</b> → diagonal → shares lose value, $${v.prem} premium cushions the fall.<br>`+
+        `Breakeven = <b>$${be}</b> (cost basis $${v.cost} − premium $${v.prem}).<br>`+
+        `At stock price <b>$${v.stock}</b> → P&L = <span class="${c}">${fmt(now)}/share (${fmt(now*100)} per contract)</span>.`+
+        (v.stock>=v.strike?` <b style="color:var(--loss)">⚠ Shares would be called away at this price.</b>`:'');
+    },
+  };
+  $('insight').innerHTML=ins[mode]();
+}
+
+function updConcept(){
+  const cards=CONCEPTS[mode];if(!cards)return;
+  const titles={leaps:'🟡 LEAPS — Key Concepts',dleaps:'🟣 Deep ITM LEAPS — Key Concepts',csp:'🔵 CSP — Key Concepts',cc:'🟢 Covered Call — Key Concepts'};
+  $('concept-ttl').textContent=titles[mode];
+  $('cgrid').innerHTML=cards.map(c=>`<div class="ccard"><div class="ccl">${c.l}</div><div class="cct">${c.t}</div><div class="ccb">${c.b}</div></div>`).join('');
+}
+
+function drawChart(datasets){
+  const cfg={
+    type:'line',data:{datasets:datasets.map(d=>({label:d.label,data:d.data,borderColor:d.color,backgroundColor:'transparent',borderWidth:2.5,pointRadius:0,tension:0,borderDash:d.dash||[]}))},
+    options:{responsive:true,maintainAspectRatio:false,parsing:false,animation:{duration:200},
+      plugins:{legend:{display:false},tooltip:{backgroundColor:'#1a1f36',borderColor:'rgba(0,0,0,0.2)',borderWidth:1,titleColor:'#ffffff',bodyColor:'#9ca3af',padding:12,
+        callbacks:{title:i=>'Stock at expiration:  $'+i[0].parsed.x,label:i=>{const n=i.parsed.y;return '  '+i.dataset.label+':  '+fmt(n)+'/share  ('+fmt(n*100)+' per contract)'}}}},
+      scales:{
+        x:{type:'linear',min:30,max:280,ticks:{color:'#6b7280',stepSize:20,callback:v=>'$'+v,font:{family:'DM Mono',size:10},maxTicksLimit:14},grid:{color:'rgba(0,0,0,0.05)'},border:{color:'rgba(0,0,0,0.1)'},title:{display:true,text:'Stock price at expiration',color:'#9ca3af',font:{family:'DM Mono',size:11}}},
+        y:{ticks:{color:'#6b7280',callback:n=>(n>=0?'+$':'-$')+Math.abs(n),font:{family:'DM Mono',size:10}},grid:{color:ctx=>ctx.tick.value===0?'rgba(0,0,0,0.22)':'rgba(0,0,0,0.05)',lineWidth:ctx=>ctx.tick.value===0?1.5:1},border:{color:'rgba(0,0,0,0.1)'},title:{display:true,text:'Profit / loss per share ($)',color:'#9ca3af',font:{family:'DM Mono',size:11}}},
+      }
+    }
+  };
+  if(chart)chart.destroy();
+  chart=new Chart($('plChart'),cfg);
+}
+
+function updLegend(items){
+  $('legend').innerHTML=items.map(item=>{
+    const s=item.dash?`border-top:2px dashed ${item.color};background:transparent;height:0;width:20px;margin-bottom:1px`:`background:${item.color};height:3px;width:20px`;
+    return `<div class="li"><div style="${s};border-radius:2px"></div>${item.label}</div>`;
+  }).join('')+`<div class="li"><div style="width:20px;height:2px;background:rgba(0,0,0,0.22)"></div>$0 line</div>`;
+}
+
+const modeName=m=>({leaps:'LEAPS',dleaps:'Deep LEAPS',csp:'CSP',cc:'CC'})[m];
+
+// Boot
+setMode('leaps');
+</script>
+</body>
+</html>
