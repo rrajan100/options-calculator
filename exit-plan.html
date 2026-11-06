@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DITM LEAPS Exit Plan</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#FAF9F5;color:#141413;font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+.wrap{max-width:1000px;margin:0 auto;padding:24px 16px 40px;display:flex;flex-direction:column;gap:16px}
+.top a{font-size:14px;color:#2F5D8A}
+h1{margin:4px 0 0;font-size:34px;font-weight:800;line-height:1.1}
+.sub{margin:6px 0 0;font-size:16px;color:#4A4A45}
+.head{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap}
+.ex{font-size:14px;color:#4A4A45;line-height:1.5}
+.card{background:#fff;border:1px solid #D9D6CC;border-radius:12px;padding:18px}
+.row{display:flex;gap:14px;flex-wrap:wrap}
+.row>.card{flex:1 1 260px}
+.h{font-size:13px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#4A4A45;margin:0 0 10px}
+.t{font-size:15px;line-height:1.6}
+.g{color:#1F5E42}.r{color:#B3412F}
+.ladder{position:relative;height:4px;background:#C9C5B8;margin:64px 24px 76px}
+.seg{position:absolute;top:0;height:4px}
+.dot{position:absolute;top:-6px;width:14px;height:14px;border-radius:7px;margin-left:-7px}
+.lbl{position:absolute;font-size:12px;font-weight:600;text-align:center;width:96px;margin-left:-48px;line-height:1.25}
+table{border-collapse:collapse;width:100%}
+td,th{padding:7px 8px;font-size:14px;text-align:left;border-bottom:1px solid #E6E3D9}
+th{font-size:12px;color:#4A4A45;text-transform:uppercase;letter-spacing:.06em}
+.small{font-size:14px;line-height:1.7}
+.fine{font-size:12px;color:#4A4A45;line-height:1.5}
+@media print{body{background:#fff}.top{display:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<div class="top"><a href="./">&larr; Back to Options P&amp;L Calculator</a></div>
+<div class="head">
+<div><h1>DITM LEAPS Exit Plan</h1><p class="sub">Hybrid 3-tranche plan for thinkorswim Android</p></div>
+<div class="ex">Example: stock <b>$200</b> &middot; <b>$160 call</b><br>Premium <b>$100</b> &middot; 3 contracts = <b>$30,000</b></div>
+</div>
+
+<div class="card">
+<p class="h">Premium ladder (per contract)</p>
+<div class="ladder">
+<div class="seg" style="left:0;width:35.3%;background:#B3412F"></div>
+<div class="seg" style="left:35.3%;width:64.7%;background:#2E7D5B"></div>
+<div class="dot" style="left:5.9%;background:#B3412F"></div>
+<div class="lbl r" style="left:5.9%;top:-50px">STOP $50<br>-50%</div>
+<div class="dot" style="left:14.7%;background:#C77D1A"></div>
+<div class="lbl" style="left:14.7%;top:16px;color:#8A5300">ALERT $65<br>-35%</div>
+<div class="dot" style="left:35.3%;background:#141413"></div>
+<div class="lbl" style="left:35.3%;top:-50px">ENTRY<br>$100</div>
+<div class="dot" style="left:64.8%;background:#2E7D5B"></div>
+<div class="lbl g" style="left:64.8%;top:16px">T1 SELL $150<br>+50%</div>
+<div class="dot" style="left:94.1%;background:#2E7D5B"></div>
+<div class="lbl g" style="left:94.1%;top:-50px">T2 SELL $200<br>+100%</div>
+</div>
+</div>
+
+<div class="row">
+<div class="card" style="border-top:5px solid #2E7D5B"><p class="h">Ticket 1</p><div class="t">Buy 1 call, mid-price limit<br><b>Order type:</b> 1st Triggers OCO<br><b>Sell limit:</b> $150 <span class="g">(+50%)</span><br><b>Stop:</b> $50 <span class="r">(-50%)</span></div></div>
+<div class="card" style="border-top:5px solid #2E7D5B"><p class="h">Ticket 2</p><div class="t">Buy 1 call, mid-price limit<br><b>Order type:</b> 1st Triggers OCO<br><b>Sell limit:</b> $200 <span class="g">(+100%)</span><br><b>Stop:</b> $50 <span class="r">(-50%)</span></div></div>
+<div class="card" style="border-top:5px solid #2F5D8A"><p class="h">Ticket 3 &middot; Runner</p><div class="t">Buy 1 call, mid-price limit<br><b>Order type:</b> 1st Triggers Single<br><b>Sell limit:</b> none<br><b>Stop:</b> $50 <span class="r">(-50%)</span></div></div>
+</div>
+
+<div class="row">
+<div class="card">
+<p class="h">Alerts (not orders)</p>
+<table><tr><th>Watch</th><th>Trigger</th></tr>
+<tr><td>Stock</td><td>Crosses below $185</td></tr>
+<tr><td>Stock</td><td>Crosses below $180</td></tr>
+<tr><td>LEAP mark</td><td>At or below $65</td></tr></table>
+<p class="small" style="margin:10px 0 0">If the $65 alert fires and the stock <b>closed</b> below $180, sell all remaining tranches. If not, do nothing. Renew alerts every 3 months.</p>
+</div>
+<div class="card">
+<p class="h">Manual rules</p>
+<div class="small"><b>Runner trail (weekly):</b> if the stock closes 15% below its peak close, sell Ticket 3.<br><b>Calendar:</b> reminder at 9 months left (review or roll) and 6 months left (exit or roll).<br><b>Tax:</b> a Jan 2029 expiry lets you hold 12+ months for long-term treatment.<br><b>After T1 and T2 fill:</b> raise the T3 stop by hand.</div>
+</div>
+</div>
+
+<div class="card">
+<p class="h">Outcome check (3 contracts, $30,000 in)</p>
+<div style="overflow-x:auto">
+<table><tr><th>Scenario</th><th>Math</th><th>Result</th></tr>
+<tr><td>All three stopped</td><td>3 x -$5,000</td><td class="r"><b>-$15,000 (-50%)</b></td></tr>
+<tr><td>T1 wins, T2 and T3 stopped</td><td>+5,000 -5,000 -5,000</td><td class="r"><b>-$5,000</b></td></tr>
+<tr><td>T1 and T2 win, T3 stopped</td><td>+5,000 +10,000 -5,000</td><td class="g"><b>+$10,000</b></td></tr>
+<tr><td>T1 and T2 win, T3 sold at $250</td><td>+5,000 +10,000 +15,000</td><td class="g"><b>+$30,000 (+100%)</b></td></tr></table>
+</div>
+</div>
+
+<div class="row">
+<div class="card"><p class="h">Every ticket</p><div class="small">Qty = <b>1</b> per ticket, not 3<br>Entry: Buy to Open, Limit, Day<br>Exits: <b>Sell to Close</b>, <b>GTC</b><br>Stops: trigger on <b>Mark</b><br>Test all three in paperMoney first</div></div>
+<div class="card"><p class="h">Final check in Orders tab</p><div class="small"><b>3</b> entry tickets, total qty 3<br>After fills: exactly <b>5</b> resting exits<br>T1: 2 &middot; T2: 2 &middot; T3: 1<br>Alerts tab: <b>3</b> alerts</div></div>
+</div>
+
+<p class="fine">Educational only, not financial advice. The $100 premium is a teaching number; a real $160 call with the stock at $200 would cost far less, but the percentages work the same way. Stop Market orders can fill below the stop on wide spreads.</p>
+</div>
+</body>
+</html>
